@@ -3,5 +3,6 @@ services:
     name: api-analitica
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn app.api_analitica:app --host=0.0.0.0 --port=10000"
-    plan: free
+    startCommand: "uvicorn main:app --host=0.0.0.0 --port=10000"
+    pythonVersion: 3.11.9
+    autoDeploy: false
