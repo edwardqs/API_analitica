@@ -18,7 +18,7 @@ app.add_middleware(
 try:
     # Cargar modelo previamente entrenado
     print("Intentando cargar el modelo...")
-    model = joblib.load(r"D:\SEMESTRE 2025-I\ANALÍTICA DE NEGOCIOS\modelo_demencia_actualizado.pkl")
+    model = joblib.load(r"modelo_demencia_actualizado.pkl")
     print("Modelo cargado exitosamente")
 except Exception as e:
     print(f"Error al cargar el modelo: {str(e)}")
