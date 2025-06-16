@@ -90,7 +90,3 @@ async def predict(input_data: PredictionInput):
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
 # No usar if __name__ == '__main__' en producción FastAPI (esto se lanza con uvicorn)
-if __name__=="main":
-    import uvicorn
-    port= int(os.getnev("PORT", 8000)
-    univcorn.run(app, host="0.0.0.0", port=port)
