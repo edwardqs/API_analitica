@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
 import os
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 app = FastAPI()
 
@@ -16,50 +16,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Intentar cargar el modelo al iniciar
 try:
-    # Cargar modelo previamente entrenado
     print("Intentando cargar el modelo...")
     ruta_modelo = os.path.join(os.path.dirname(__file__), "modelo", "modelo_demencia_actualizado.pkl")
     model = joblib.load(ruta_modelo)
     print("Modelo cargado exitosamente")
 except Exception as e:
     print(f"Error al cargar el modelo: {str(e)}")
-    exit(1)
+    raise RuntimeError("No se pudo cargar el modelo")
 
+# Entrada del modelo
 class PredictionInput(BaseModel):
-    age: float
-    gender: float
-    educationyears: float
-    Global: float
-    EF: float
-    PS: float
-    glucose_min: float
-    cholesterol_total: float
-    hypertension_sys: float
-    smoking: float
-    Fazekas: float
-    lacunes_num: float
-    SVD_Simple_Score: float
-    CMB_count: float
+    age: float = Field(..., alias="age")
+    gender: float = Field(..., alias="gender")
+    educationyears: float = Field(..., alias="educationyears")
+    Global: float = Field(..., alias="Global")
+    EF: float = Field(..., alias="EF")
+    PS: float = Field(..., alias="PS")
+    glucose_min: float = Field(..., alias="glucose_min")
+    cholesterol_total: float = Field(..., alias="cholesterol_total")
+    hypertension_sys: float = Field(..., alias="hypertension_sys")
+    smoking: float = Field(..., alias="smoking")
+    Fazekas: float = Field(..., alias="Fazekas")
+    lacunes_num: float = Field(..., alias="lacunes_num")
+    SVD_Simple_Score: float = Field(..., alias="SVD_Simple_Score")
+    CMB_count: float = Field(..., alias="CMB_count")
 
-    # Configurar alias para manejar nombres con espacios
-    model_config = {
-        "alias_generator": lambda x: x.replace('_', ' '),
-        "populate_by_name": True
-    }
+    class Config:
+        allow_population_by_field_name = True
 
 @app.post("/predict")
 async def predict(input_data: PredictionInput):
     try:
-        # Verificar que todos los campos sean numéricos
-        for field, value in input_data.model_dump().items():
-            if not isinstance(value, (int, float)):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"El campo '{field}' debe ser un número válido"
-                )
-
-        # Convertir input a arreglo
         data = np.array([
             input_data.age,
             input_data.gender,
@@ -77,33 +66,31 @@ async def predict(input_data: PredictionInput):
             input_data.CMB_count
         ]).reshape(1, -1)
 
-        # Realizar predicción
+        # Predecir
         prob = model.predict_proba(data)[0][1]
         pred = int(prob >= 0.5)
 
-        # Interpretar riesgo
+        # Clasificación de riesgo
+        riesgo = "Bajo"
         if prob >= 0.75:
             riesgo = "Alto"
         elif prob >= 0.5:
             riesgo = "Moderado"
-        else:
-            riesgo = "Bajo"
 
         return {
-            'probabilidad_demencia': round(prob, 4),
-            'riesgo': riesgo,
-            'prediccion': pred,
-            'status': 'success'
+            "probabilidad_demencia": round(prob, 4),
+            "riesgo": riesgo,
+            "prediccion": pred,
+            "status": "success"
         }
-        
+
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Error en los datos de entrada: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
 
-if __name__ == '__main__':
+# No usar if __name__ == '__main__' en producción FastAPI (esto se lanza con uvicorn)
+if __name__=="main":
     import uvicorn
-    print("Iniciando API de predicción con FastAPI...")
-    print("API disponible en: http://localhost:8000")
-    print("Documentación: http://localhost:8000/docs")
-    uvicorn.run("api_analitica:app", host="0.0.0.0", port=8000, reload=True)
+    port= int(os.getnev("PORT", 8000)
+    univcorn.run(app, host="0.0.0.0", port=port)
