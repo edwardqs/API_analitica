@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import numpy as np
+import os
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -18,7 +19,8 @@ app.add_middleware(
 try:
     # Cargar modelo previamente entrenado
     print("Intentando cargar el modelo...")
-    model = joblib.load(r"modelo_demencia_actualizado.pkl")
+    ruta_modelo = os.path.join(os.path.dirname(__file__), "modelo", "modelo_demencia_actualizado.pkl")
+    model = joblib.load(ruta_modelo)
     print("Modelo cargado exitosamente")
 except Exception as e:
     print(f"Error al cargar el modelo: {str(e)}")
